@@ -1,0 +1,48 @@
+server:
+  port: 5000
+
+spring:
+
+  profiles:
+    active:
+      - prod
+
+  application:
+    name: Meow DJ
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  h2:
+    console:
+      enabled: true
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+    url: "https://api.openai.com/v1/chat/completions"
+    model: "gpt-3.5-turbo"
+
+lastfm:
+  api:
+    key: ${LASTFM_API_KEY}
+  shared:
+    secret: ${LASTFM_SHARED_SECRET}
+
+youtube:
+  api:
+    key: ${YOUTUBE_API_KEY}
+
+google:
+  api:
+    key: ${GCP_API_KEY}
+    secret: ${GCP_API_SECRET}
+    redirect: ${GOOGLE_REDIRECT_URL}

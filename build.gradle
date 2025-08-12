@@ -1,0 +1,68 @@
+plugins {
+	id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
+	id 'org.springframework.boot' version '3.5.4'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+if (project.hasProperty('profile') && project.property('profile') == 'prod') {
+	tasks.processResources {
+		exclude("firebaseServiceAccountKey.json")
+		exclude("application-dev.yml")
+	}
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
+	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+	testImplementation 'io.mockk:mockk:1.13.11'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// DB
+	runtimeOnly("com.h2database:h2")
+	runtimeOnly("com.mysql:mysql-connector-j")
+
+	// firebase
+	implementation("com.google.firebase:firebase-admin:9.5.0")
+
+	// coroutine
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+
+	// security
+	implementation("org.springframework.boot:spring-boot-starter-security")
+
+	// aws
+	implementation(platform("software.amazon.awssdk:bom:2.25.40"))
+	implementation("software.amazon.awssdk:secretsmanager")
+}
+
+kotlin {
+	compilerOptions {
+		freeCompilerArgs.addAll '-Xjsr305=strict'
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
