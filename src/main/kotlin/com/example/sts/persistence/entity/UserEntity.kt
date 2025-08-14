@@ -9,7 +9,7 @@ class UserEntity(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val userId: Long,
+    val userId: Long?,
 
     @Column(unique = true, nullable = false)
     val firebaseUid: String,
@@ -18,11 +18,11 @@ class UserEntity(
 
     val userEmail: String,
 
-    var youTubeAccessToken: String,
+    var youTubeAccessToken: String?,
 
-    var refreshToken: String,
+    var refreshToken: String?,
 
-    var expiresAt: Instant,
+    var expiresAt: Instant?,
 
-    var createdAt: String
+    var createdAt: Instant
 )

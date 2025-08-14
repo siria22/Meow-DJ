@@ -23,6 +23,9 @@ class TokenRefreshFailedException(message: String, cause: Throwable? = null) : R
 class TokenNotValidException(message: String = "Access token is not valid", cause: Throwable? = null) :
     RuntimeException(message, cause)
 
+class EmptyAccessTokenException(message: String = "Access token is empty", cause: Throwable? = null) :
+    RuntimeException(message, cause)
+
 // PLAYLIST
 
 class PlaylistNotFoundException(playlistId: Long)

@@ -13,6 +13,6 @@ class ControllerUtils(
         val idToken = authHeader.removePrefix("Bearer ").trim()
         val decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken)
 
-        return authService.getUserByFirebaseUid(decodedToken.uid)
+        return authService.getUserByFirebaseUidOrCreateUser(decodedToken.uid)
     }
 }

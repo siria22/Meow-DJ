@@ -58,10 +58,13 @@ fun YouTubeAddToPlaylistResult.toDto(): AddToPlaylistResponse {
 }
 
 fun UserEntity.toDomain(): User = User(
-    userId = this.userId,
+    userId = this.userId!!,
     userName = this.userName,
     userEmail = this.userEmail,
-    createdAt = this.createdAt
+    createdAt = this.createdAt.toString(),
+    youTubeAccessToken = this.youTubeAccessToken,
+    refreshToken = this.refreshToken,
+    expiresAt = this.expiresAt
 )
 
 fun ChatSessionEntity.toDomain(): ChatSession = ChatSession(

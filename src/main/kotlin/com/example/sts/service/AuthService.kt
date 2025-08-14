@@ -1,5 +1,6 @@
 package com.example.sts.service
 
+import com.example.sts.exceptions.EmptyAccessTokenException
 import com.example.sts.exceptions.TokenRefreshFailedException
 import com.example.sts.exceptions.UserNotFoundException
 import com.example.sts.persistence.entity.UserEntity
@@ -7,6 +8,7 @@ import com.example.sts.persistence.repository.UsersRepository
 import com.example.sts.service.model.auth.TokenResponse
 import com.example.sts.service.model.auth.User
 import com.example.sts.service.model.toDomain
+import com.google.firebase.auth.FirebaseAuth
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -19,7 +21,8 @@ import java.time.Instant
 
 @Service
 class AuthService(
-    private val usersRepository: UsersRepository
+    private val usersRepository: UsersRepository,
+    private val firebaseAuth: FirebaseAuth
 ) {
     @Value("\${google.api.key}")
     private lateinit var clientId: String
@@ -27,19 +30,32 @@ class AuthService(
     @Value("\${google.api.secret}")
     private lateinit var clientSecret: String
 
-    private val googleTokenUrl = "https://oauth2.googleapis.com/token"
-
     @Value("\${google.api.redirect}")
     private lateinit var redirectUri: String
 
+    private val googleTokenUrl = "https://oauth2.googleapis.com/token"
+
     private val restTemplate = RestTemplate()
 
-    fun getUserByFirebaseUid(firebaseUid: String): User {
-        val userEntity = runCatching {
-            usersRepository.findByFirebaseUid(firebaseUid)
-        }.getOrNull() ?: throw UserNotFoundException(firebaseUid)
+    fun getUserByFirebaseUidOrCreateUser(firebaseUid: String): User {
+        val existingUser = usersRepository.findByFirebaseUid(firebaseUid)
+        if (existingUser != null) {
+            return existingUser.toDomain()
+        }
 
-        return userEntity.toDomain()
+        val firebaseUser = firebaseAuth.getUser(firebaseUid)
+        val newUserEntity = UserEntity(
+            userId = null,
+            firebaseUid = firebaseUser.uid,
+            userName = firebaseUser.displayName,
+            userEmail = firebaseUser.email,
+            youTubeAccessToken = null,
+            refreshToken = null,
+            expiresAt = null,
+            createdAt = Instant.now()
+        )
+
+        return usersRepository.save(newUserEntity).toDomain()
     }
 
     fun exchangeCodeForYouTubeAccessToken(userId: Long, code: String): Boolean {
@@ -75,12 +91,17 @@ class AuthService(
         val userEntity = usersRepository.findById(userId)
             .orElseThrow { UserNotFoundException(userId.toString()) }
 
-        if (userEntity.expiresAt.isBefore(Instant.now())) {
-            val refreshedUser = refreshGoogleAccessToken(userEntity)
-            return refreshedUser.youTubeAccessToken
-        }
+        val user = userEntity.toDomain()
 
-        return userEntity.youTubeAccessToken
+        if(user.youTubeAccessToken == null) {
+            throw EmptyAccessTokenException()
+        } else {
+            if (user.expiresAt!!.isBefore(Instant.now())) {
+                val refreshedUser = refreshGoogleAccessToken(userEntity)
+                return refreshedUser.youTubeAccessToken ?: ""
+            }
+        }
+        return user.youTubeAccessToken
     }
 
     private fun refreshGoogleAccessToken(user: UserEntity): UserEntity {
