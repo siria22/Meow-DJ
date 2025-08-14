@@ -24,5 +24,6 @@ class UserEntity(
 
     var expiresAt: Instant?,
 
+    @Column(columnDefinition = "DATETIME(6)")
     var createdAt: Instant
 )
